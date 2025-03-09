@@ -211,7 +211,7 @@ class RefineHead(BaseDecodeHead):
         seg_logit_fuse = self.classifer(seg_feat_fuse)
 
 
-        return seg_logit,seg_logit_fuse
+        return seg_logit, seg_logit_fuse
     
     def forward_train(self, seg_feat,bound_feat, bound_logit, img_metas, gt_semantic_seg, gt_semantic_segedge, train_cfg):
         losses = dict()

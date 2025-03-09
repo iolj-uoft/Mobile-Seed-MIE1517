@@ -78,6 +78,6 @@ def main(cityscapesPath = None):
 
 # call the main
 arg_parse = argparse.ArgumentParser()
-arg_parse.add_argument("data_path",required=True,type=str)
+arg_parse.add_argument("data_path", type=str, help="Path to Cityscapes dataset")
 parser = arg_parse.parse_args()
 main(parser.data_path)

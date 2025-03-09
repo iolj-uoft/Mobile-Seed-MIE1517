@@ -1,3 +1,9 @@
+#!/bin/bash
+
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate mobileseed
+
+
 
 CONFIG=$1
 CHECKPOINT=$2

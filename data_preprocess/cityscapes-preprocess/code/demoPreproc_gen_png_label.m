@@ -34,7 +34,7 @@ radius = 2;
 flagPngFile = true; % Output .png edge label files
 
 %% Setup Parallel Pool
-numWorker = 12; % Number of matlab workers for parallel computing
+numWorker = 8; % Number of matlab workers for parallel computing
 delete(gcp('nocreate'));
 parpool('local', numWorker);
 

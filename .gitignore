@@ -164,3 +164,7 @@ re_model.py
 /work_dirs
 .*/
 *.txt
+*.png
+*.json
+*.mat
+mmcv/
