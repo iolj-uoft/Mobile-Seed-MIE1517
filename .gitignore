@@ -167,4 +167,4 @@ re_model.py
 *.png
 *.json
 *.mat
-mmcv/
+mmcv/data/dash_cam/*.ts
