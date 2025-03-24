@@ -30,7 +30,7 @@ model = dict(
     )
 
 # AdamW optimizer, no weight decay for position embedding & layer norm in backbone
-optimizer = dict(_delete_=True, type='AdamW', lr=0.0004, betas=(0.9, 0.999), weight_decay=0.01)
+optimizer = dict(_delete_=True, type='AdamW', lr=0.0004 * 5 / 8, betas=(0.9, 0.999), weight_decay=0.01)
 
 lr_config = dict(_delete_=True, policy='poly',
                  warmup='linear',
@@ -39,7 +39,7 @@ lr_config = dict(_delete_=True, policy='poly',
                  power=1.0, min_lr=0.0 , by_epoch=False)
 
 # By default, models are trained on 2 GPUs with 4 images per GPU
-data=dict(samples_per_gpu=8, workers_per_gpu=8)
+data=dict(samples_per_gpu=5, workers_per_gpu=8)
 find_unused_parameters=True
 
 

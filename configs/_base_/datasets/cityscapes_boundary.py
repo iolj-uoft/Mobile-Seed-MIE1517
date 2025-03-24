@@ -4,7 +4,7 @@ https://github.com/open-mmlab/mmsegmentation/blob/master/configs/_base_/datasets
 '''
 # dataset settings
 dataset_type = 'CityscapesDataset_boundary'
-data_root = '../data/cityscapes/data_proc_nis'
+data_root = 'data/cityscapes/data_proc_nis'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (1024, 1024)
