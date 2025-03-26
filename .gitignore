@@ -168,3 +168,4 @@ re_model.py
 *.json
 *.mat
 mmcv/data/dash_cam/*.ts
+*.ts

@@ -258,7 +258,7 @@ class LowPassModule(nn.Module):
     def forward(self, feats):
         h, w = feats.size(2), feats.size(3)
         feats = torch.split(feats, self.channel_splits, dim=1)
-        priors = [F.upsample(input=self.stages[i](feats[i]), size=(h, w), mode='bilinear') for i in range(4)]
+        priors = [F.interpolate(input=self.stages[i](feats[i]), size=(h, w), mode='bilinear', align_corners=False) for i in range(4)]
         bottle = torch.cat(priors, 1)
         
         return self.relu(bottle)
