@@ -23,6 +23,9 @@ from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger, setup_multi_processes
 
+import sys
+import atexit
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
@@ -106,6 +109,11 @@ def parse_args():
 
     return args
 
+def log_imported_files():
+    with open("imported_files.txt", "w") as f:
+        for module in sys.modules.values():
+            if hasattr(module, '__file__') and module.__file__ is not None:
+                f.write(module.__file__ + '\n')
 
 def main():
     args = parse_args()
