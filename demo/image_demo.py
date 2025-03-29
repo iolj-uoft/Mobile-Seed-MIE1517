@@ -102,58 +102,57 @@ def main():
     parser.add_argument('img', help='Image file')
     parser.add_argument('config', help='Config file')
     parser.add_argument('checkpoint', help='Checkpoint file')
-    parser.add_argument('out_seg',help='Path to output segment file')
-    parser.add_argument('--out_sebound',help='Path to output semantic boundary file')
-    parser.add_argument('--out_bibound',help='Path to output binary boundary file')
-    parser.add_argument(
-        '--device', default='cuda', help='Device used for inference')
-    parser.add_argument(
-        '--palette',
-        default='cityscapes',
-        help='Color palette used for segmentation map')
-    parser.add_argument(
-        '--opacity',
-        type=float,
-        default=0.5,
-        help='Opacity of painted segmentation map. In (0, 1] range.')
+    parser.add_argument('--out_sebound', help='Path to output semantic boundary file')
+    parser.add_argument('--out_bibound', help='Path to output binary boundary file')
+    parser.add_argument('--device', default='cuda', help='Device used for inference')
+    parser.add_argument('--palette', default='cityscapes', help='Color palette used for segmentation map')
+    parser.add_argument('--opacity', type=float, default=0.5, help='Opacity of painted segmentation map. In (0, 1] range.')
+    parser.add_argument('--prefix', help='Prefix to be added to output file names')  # New argument for prefix
     args = parser.parse_args()
 
-
-    # build the model from a config file and a checkpoint file
+    # Build the model from a config file and a checkpoint file
     model = init_segmentor(args.config, args.checkpoint, device=args.device)
     result = inference_segmentor(model, args.img)
     seg_pred = result
-        # show the results
-        # reset outfile name
-        # args.out_folder = args.img.replace("color","seq_pred")
-        # args.outss_file = args.out_file.replace(".png",outss_suffix)
-        # args.outse_file = args.outss_file.replace(outss_suffix,outse_suffix)
-        # args.outed_file = args.outss_file.replace(outss_suffix,outed_suffix)
-        
-        # cv2.imwrite(outcolor_path,cv2.imread(i))
+
+    # Output segmentation result image (e.g., colored segmentation map)
+    input_name = os.path.splitext(os.path.basename(args.img))[0]
+    # Apply prefix to the segmentation output file name
+    seg_output_path = f"demo/{input_name}_seg_{args.prefix}.png"
     show_result_pyplot(
         model,
         args.img,
         seg_pred,
         get_palette(args.palette),
         opacity=args.opacity,
-        out_file=args.out_seg)
-    
+        out_file=seg_output_path)
+
+    # Automatically derive the output file names based on input image name and prefix
+    output_prefix = f"demo/{args.prefix}_{input_name}"
+
+    # Output semantic boundary file with dynamic name
     if args.out_sebound:
-        onehot_mask = mask_to_onehot(seg_pred[0],19) # one input img in default
-        os.makedirs("finetuning", exist_ok=True)  # Ensure the folder exists
+        onehot_mask = mask_to_onehot(seg_pred[0], 19)  # one input img in default
+        os.makedirs("demo", exist_ok=True)  # Ensure the folder exists
         for class_id in range(19):
-            binary = onehot_mask[class_id] * 255
-            cv2.imwrite(os.path.join("finetuning", f"class_{class_id}.png"), binary)
-        sebound_mask = onehot_to_multiclass_boundarys(onehot_mask,2,19)
-        visualize_prediction(args.out_sebound,sebound_mask)
+            binary = (onehot_mask[class_id] * 255).astype(np.uint8)
+            cv2.imwrite(os.path.join("demo", f"class_{class_id}.png"), binary)
+        sebound_mask = onehot_to_multiclass_boundarys(onehot_mask, 2, 19)
+        
+        # Modify the output name for sebound to include prefix and the input file name
+        sebound_output_path = f"{output_prefix}_sebound.png"
+        visualize_prediction(sebound_output_path, sebound_mask)
     
+    # Output binary boundary file with dynamic name
     if args.out_bibound:
-        bound_pred = (bound_pred[0] * 255.0).astype(np.uint8)
-        bound_pred = cv2.applyColorMap(bound_pred,13)
-        cv2.imwrite(args.out_bibound,bound_pred)
-
-
+        # Convert the segmentation prediction into a boundary map
+        bound_pred = (seg_pred[0] * 255.0).astype(np.uint8)  # Convert to uint8 for visualization
+        bound_pred = cv2.applyColorMap(bound_pred, 13)  # Apply color map for binary boundary
+        
+        # Modify the output name for bibound to append '_bibound'
+        bibound_output_path = f"{output_prefix}_bibound.png"
+        cv2.imwrite(bibound_output_path, bound_pred)
 
 if __name__ == '__main__':
     main()
+
