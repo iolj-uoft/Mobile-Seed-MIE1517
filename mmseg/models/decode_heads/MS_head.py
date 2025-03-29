@@ -17,6 +17,7 @@ from mmseg.ops import resize
 from ..builder import HEADS
 from .aff_head import CLS,BaseDecodeHead
 from .LBS_head import GCA, DAFF
+from .DAFF_Fusion_Weight import DAFF_AFDStyle
     
 class ChannelAtt(nn.Module):
     def __init__(self, in_channels, out_channels, conv_cfg, norm_cfg, act_cfg):
@@ -181,7 +182,13 @@ class RefineHead(BaseDecodeHead):
         
         # semantic and boundary feature fusion module 
         self.gca = GCA(in_channels=fuse_channel)
-        self.daff = DAFF(in_channels=fuse_channel)
+        
+        # LBSNet
+        # self.daff = DAFF(in_channels=fuse_channel)
+        
+        # DAFF with Dynamic Weights
+        self.daff = DAFF_AFDStyle(in_channels=fuse_channel)
+        
         # self.bs_fusion = AFD(fuse_channel,fuse_channel,conv_cfg=self.conv_cfg,norm_cfg=self.norm_cfg,act_cfg=self.act_cfg,h = 8)
 
         self.align_fuse = ConvModule(
@@ -209,7 +216,8 @@ class RefineHead(BaseDecodeHead):
         # seg_feat_fuse = self.up(seg_feat)
         # seg_feat_fuse = torch.cat([seg_feat_fuse,edge_feat],1)
         # _,_,seg_feat_fuse = self.bs_fusion(seg_feat_fuse, bound_feat)
-        bound_feat = self.gca(bound_feat)
+        
+        # bound_feat = self.gca(bound_feat)
         seg_feat_fuse = self.daff(seg_feat_fuse, bound_feat)
         seg_logit_fuse = self.classifer(seg_feat_fuse)
 

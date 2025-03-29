@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/Mobile_Seed.py', '../_base_/datasets/cityscapes_1024x1024_boundary.py',
-    '../_base_/default_runtime.py', '../_base_/schedules/schedule_20k.py'
+    '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 model = dict(
     pretrained='./ckpt/AFFormer_tiny_ImageNet1k.pth',

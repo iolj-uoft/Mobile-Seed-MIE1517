@@ -245,7 +245,10 @@ class BaseSegmentor(BaseModule, metaclass=ABCMeta):
         """
         img = mmcv.imread(img)
         img = img.copy()
-        seg = result[0]
+        # seg = result[0]
+        seg = result[0] if isinstance(result[0], np.ndarray) else result[0][0]
+        print(f"Type of seg: {type(seg)}")
+        print(len(seg))
         if palette is None:
             if self.PALETTE is None:
                 # Get random state before set seed,
