@@ -169,3 +169,4 @@ re_model.py
 *.mat
 mmcv/data/dash_cam/*.ts
 *.ts
+*.mp4
