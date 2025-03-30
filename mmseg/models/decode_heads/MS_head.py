@@ -84,6 +84,7 @@ class BoundaryHead(BaseDecodeHead):
         self.align1 = ConvModule(self.in_channels[1],out_channels=bound_channels[1],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
         self.align2 = ConvModule(self.in_channels[2],out_channels=bound_channels[2],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
         self.align3 = ConvModule(self.in_channels[3],out_channels=bound_channels[3],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
+        self.gca = GCA(in_channels=sum(bound_channels))
 
     
     def forward(self, seg_feat,img_shape,infer = False):
@@ -94,6 +95,7 @@ class BoundaryHead(BaseDecodeHead):
         bound_feat2 = resize(self.align2(seg_feat[2]),size = bound_shape,mode = 'bilinear')
         bound_feat3 = resize(self.align3(seg_feat[3]),size = bound_shape,mode = 'bilinear')
         bound_feat = torch.cat([bound_feat0,bound_feat1,bound_feat2,bound_feat3],1)
+        bound_feat = self.gca(bound_feat)
         bound_logit = self.conv_seg(bound_feat)
 
         # edge_logit = self.conv_seg(edge_feat)
@@ -180,8 +182,6 @@ class RefineHead(BaseDecodeHead):
         self.boundary_filter.weight.data = self.boundary_filter_weight
         self.boundary_filter.weight.requires_grad = False
         
-        # semantic and boundary feature fusion module 
-        self.gca = GCA(in_channels=fuse_channel)
         
         # LBSNet
         # self.daff = DAFF(in_channels=fuse_channel)
@@ -217,7 +217,6 @@ class RefineHead(BaseDecodeHead):
         # seg_feat_fuse = torch.cat([seg_feat_fuse,edge_feat],1)
         # _,_,seg_feat_fuse = self.bs_fusion(seg_feat_fuse, bound_feat)
         
-        # bound_feat = self.gca(bound_feat)
         seg_feat_fuse = self.daff(seg_feat_fuse, bound_feat)
         seg_logit_fuse = self.classifer(seg_feat_fuse)
 

@@ -1,27 +1,41 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import math
 
 class GCA(nn.Module):
     """
-    Gated Channel Adaptive module
-    Lightweight enhancement for boundary features
+    Gated Channel Attention as described in the architecture diagram.
     """
-    def __init__(self, in_channels, reduction=16):
+
+    def __init__(self, in_channels):
         super(GCA, self).__init__()
-        self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc1 = nn.Conv2d(in_channels, in_channels // reduction, 1, bias=False)
-        self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Conv2d(in_channels // reduction, in_channels, 1, bias=False)
-        self.sigmoid = nn.Sigmoid()
+        self.alpha = nn.Parameter(torch.ones(1, in_channels, 1, 1))
+        self.beta = nn.Parameter(torch.ones(1, in_channels, 1, 1))
+        self.gamma = nn.Parameter(torch.zeros(1, in_channels, 1, 1))  # usually start from zero
+        self.tanh = nn.Tanh()
 
     def forward(self, x):
-        # Global context embedding
-        y = self.global_avg_pool(x)
-        y = self.relu(self.fc1(y))
-        y = self.sigmoid(self.fc2(y))
-        return x * y  # Gated channel-wise enhancement
+        # x: (B, C, H, W)
+        B, C, H, W = x.size()
+
+        # 1. L2-norm along (H, W)
+        l2_norm = torch.norm(x, p=2, dim=(2, 3), keepdim=True)  # Shape: (B, C, 1, 1)
+
+        # 2. Divide by sqrt(C) (channel-wise norm scaling)
+        norm_scale = math.sqrt(C)
+        scaled_norm = l2_norm / norm_scale  # Shape: (B, C, 1, 1)
+
+        # 3. α * scaled_norm * β + γ
+        gated = self.alpha * scaled_norm * self.beta + self.gamma
+
+        # 4. Tanh
+        gated = self.tanh(gated)
+
+        # 5. Add residual: R^B = F^B + F^B * Gated
+        out = x + x * gated
+
+        return out
 
 
 class DAFF(nn.Module):
