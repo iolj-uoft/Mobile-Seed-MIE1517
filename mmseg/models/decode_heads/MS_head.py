@@ -219,7 +219,7 @@ class RefineHead(BaseDecodeHead):
         
         seg_feat_fuse = self.daff(seg_feat_fuse, bound_feat)
         seg_logit_fuse = self.classifer(seg_feat_fuse)
-
+        # print(f"seg_logit_fuse shape: {seg_logit_fuse.shape}\n")
 
         return seg_logit, seg_logit_fuse
     

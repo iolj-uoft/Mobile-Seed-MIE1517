@@ -11,7 +11,7 @@ prefix = input("Enter a prefix for output filename (e.g., 'seg'): ").strip()
 config_file = 'configs/Mobile_Seed/MS_tiny_cityscapes.py'
 checkpoint_file = 'ckpt/GCA.pth'
 device = 'cuda:0'
-video_path = 'data/dash_cam/Stockyards.ts'  # Replace with your .ts file
+video_path = 'data/dash_cam/Stockyards_cropped.ts'  # Replace with your .ts file
 
 # --- Construct output filename ---
 video_name = os.path.splitext(os.path.basename(video_path))[0]
@@ -47,7 +47,7 @@ while cap.isOpened():
 
     # Preprocess
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    frame_rgb = cv2.resize(frame_rgb, (1024, 512))
+    # frame_rgb = cv2.resize(frame_rgb, (1024, 512))
 
     # Inference
     with torch.no_grad():
