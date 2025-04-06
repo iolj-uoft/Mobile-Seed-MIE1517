@@ -444,7 +444,8 @@ class EncoderDecoder(BaseSegmentor):
 
     def forward_dummy(self, img):
         """Dummy forward function."""
-        seg_logit = self.encode_decode(img, None)
+        img_metas = [{'pad_shape': img.shape[2:]}]
+        seg_logit = self.encode_decode(img, img_metas)
 
         return seg_logit
 

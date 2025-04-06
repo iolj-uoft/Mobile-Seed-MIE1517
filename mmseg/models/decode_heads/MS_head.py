@@ -16,8 +16,9 @@ from torch import einsum
 from mmseg.ops import resize
 from ..builder import HEADS
 from .aff_head import CLS,BaseDecodeHead
+from .LBS_head import GCA, DAFF
+from .DAFF_Fusion_Weight import DAFF_AFDStyle
     
-
 class ChannelAtt(nn.Module):
     def __init__(self, in_channels, out_channels, conv_cfg, norm_cfg, act_cfg):
         super(ChannelAtt, self).__init__()
@@ -83,6 +84,7 @@ class BoundaryHead(BaseDecodeHead):
         self.align1 = ConvModule(self.in_channels[1],out_channels=bound_channels[1],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
         self.align2 = ConvModule(self.in_channels[2],out_channels=bound_channels[2],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
         self.align3 = ConvModule(self.in_channels[3],out_channels=bound_channels[3],kernel_size=3,stride=1,padding=1,conv_cfg=self.conv_cfg,norm_cfg=dict(type='GN', num_groups=16, requires_grad=True))
+        self.gca = GCA(in_channels=sum(bound_channels))
 
     
     def forward(self, seg_feat,img_shape,infer = False):
@@ -93,6 +95,7 @@ class BoundaryHead(BaseDecodeHead):
         bound_feat2 = resize(self.align2(seg_feat[2]),size = bound_shape,mode = 'bilinear')
         bound_feat3 = resize(self.align3(seg_feat[3]),size = bound_shape,mode = 'bilinear')
         bound_feat = torch.cat([bound_feat0,bound_feat1,bound_feat2,bound_feat3],1)
+        bound_feat = self.gca(bound_feat)
         bound_logit = self.conv_seg(bound_feat)
 
         # edge_logit = self.conv_seg(edge_feat)
@@ -179,8 +182,14 @@ class RefineHead(BaseDecodeHead):
         self.boundary_filter.weight.data = self.boundary_filter_weight
         self.boundary_filter.weight.requires_grad = False
         
-        # semantic and boundary feature fusion module 
-        self.bs_fusion = AFD(fuse_channel,fuse_channel,conv_cfg=self.conv_cfg,norm_cfg=self.norm_cfg,act_cfg=self.act_cfg,h = 8)
+        
+        # LBSNet
+        # self.daff = DAFF(in_channels=fuse_channel)
+        
+        # DAFF with Dynamic Weights
+        self.daff = DAFF_AFDStyle(in_channels=fuse_channel)
+        
+        # self.bs_fusion = AFD(fuse_channel,fuse_channel,conv_cfg=self.conv_cfg,norm_cfg=self.norm_cfg,act_cfg=self.act_cfg,h = 8)
 
         self.align_fuse = ConvModule(
              self.in_channels[-1],
@@ -206,10 +215,11 @@ class RefineHead(BaseDecodeHead):
         # seg_feat_fuse = self.align_fuse(seg_feat)
         # seg_feat_fuse = self.up(seg_feat)
         # seg_feat_fuse = torch.cat([seg_feat_fuse,edge_feat],1)
-        _,_,seg_feat_fuse = self.bs_fusion(seg_feat_fuse,bound_feat)
-
+        # _,_,seg_feat_fuse = self.bs_fusion(seg_feat_fuse, bound_feat)
+        
+        seg_feat_fuse = self.daff(seg_feat_fuse, bound_feat)
         seg_logit_fuse = self.classifer(seg_feat_fuse)
-
+        # print(f"seg_logit_fuse shape: {seg_logit_fuse.shape}\n")
 
         return seg_logit, seg_logit_fuse
     
